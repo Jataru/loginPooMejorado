@@ -61,13 +61,14 @@ $csrf_token = SecurityHelper::getCsrfToken();
   <link rel="stylesheet" id="sobrenosotros-style" href="../styles/css/section-sobrenosotros.css">
   <link rel="stylesheet" href="../styles/css/preguntas.css">
   <link rel="stylesheet" href="../styles/css/ContactForm.css">
+  <link rel="stylesheet" href="../styles/css/dashboard.css">
   <title>Dashboard - Lubriken</title>
 </head>
 
 <body>
   <header id="navigation-bar">
     <section id="desktop-navbar">
-      <img src="../images/lubriken-log-o-type.png" alt="logotype" />
+      <img src="../images/lubriken-log-o-type.png" alt="logotype"  />
       <nav class="desktop-menu">
         <ul>
           <li><a href="#">Inicio</a></li>
@@ -86,32 +87,31 @@ $csrf_token = SecurityHelper::getCsrfToken();
               </a>
 
               <?php if (!empty($cart_items)): ?>
-                <div class="shein-dropdown">
+                <article class="shein-dropdown">
                   <ul class="shein-list">
                     <?php foreach ($cart_items as $item): ?>
                       <li class="shein-item">
-                        <div class="shein-img-wrapper">
-                          <img src="<?php echo htmlspecialchars($item['imagen_url']); ?>" alt="Producto"
-                            style="width: 70px; height: 90px; object-fit: cover; border-radius: 4px; display: block;">
-                        </div>
-                        <div class="shein-info">
+                        <article class="shein-img-wrapper">
+                          <img src="<?php echo htmlspecialchars($item['imagen_url']); ?>" alt="Producto" />
+                        </article>
+                        <article class="shein-info">
                           <span class="shein-name"><?php echo htmlspecialchars($item['nombre']); ?></span>
-                          <span style="font-size: 0.8rem; color: #888;">Cant: <?php echo $item['cantidad']; ?></span>
+                          <span class="small-muted">Cant: <?php echo $item['cantidad']; ?></span>
                           <span class="shein-price">$<?php echo number_format($item['precio'], 2); ?></span>
-                        </div>
+                        </article>
                       </li>
                     <?php endforeach; ?>
                   </ul>
-                  <div class="shein-footer">
-                    <div class="shein-total-row">
+                  <article class="shein-footer">
+                    <article class="shein-total-row">
                       <span>Total:</span>
-                      <span style="color: #fa6338;">
+                      <span class="price-highlight">
                         $<?php echo number_format(array_sum(array_column($cart_items, 'subtotal')), 2); ?>
                       </span>
-                    </div>
+                    </article>
                     <a href="userdata.php?tab=cart" class="shein-btn-checkout">VER BOLSA</a>
-                  </div>
-                </div>
+                  </article>
+                </article>
               <?php endif; ?>
             </li>
           <?php endif; ?>
@@ -166,33 +166,33 @@ $csrf_token = SecurityHelper::getCsrfToken();
     </nav>
 
     <button id="mobile-menu-btn">☰</button>
-  </header>
-
-  <main>
     <?php if ($user_logged_in): ?>
-      <form action="../php/controllers/UserController.php" method="POST" style="text-align: right; padding: 10px;">
+      <form action="../php/controllers/UserController.php" method="POST" class="logout-form header-logout">
         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
         <input type="hidden" name="action" value="logout">
         <button type="submit" class="logout-btn">Cerrar Sesión</button>
       </form>
     <?php endif; ?>
+  </header>
+
+  <main>
 
     <?php if ($update_error_message): ?>
-      <div class="errorMsg" style="color: red; padding: 10px; text-align:center; border: 1px solid red; margin: 10px;">
+      <article class="errorMsg">
         <?php echo htmlspecialchars($update_error_message); ?>
-      </div>
+      </article>
     <?php endif; ?>
 
     <?php if ($cart_success_message): ?>
-      <div class="successMsg" style="color: green; padding: 10px; text-align:center; border: 1px solid green; margin: 10px;">
+      <article class="successMsg">
         <?php echo htmlspecialchars($cart_success_message); ?>
-      </div>
+      </article>
     <?php endif; ?>
 
     <?php if ($cart_error_message): ?>
-      <div class="errorMsg" style="color: red; padding: 10px; text-align:center; border: 1px solid red; margin: 10px;">
+      <article class="errorMsg">
         <?php echo htmlspecialchars($cart_error_message); ?>
-      </div>
+      </article>
     <?php endif; ?>
 
 
@@ -218,8 +218,8 @@ $csrf_token = SecurityHelper::getCsrfToken();
             alt="<?php echo htmlspecialchars($product['nombre']); ?>" />
 
           <figcaption><?php echo htmlspecialchars($product['nombre']); ?></figcaption>
-          <p><?php echo htmlspecialchars($product['descripcion'] ?? 'Sin descripción.'); ?></p>
-          <p>Precio: <strong><?php echo htmlspecialchars($product['precio']); ?>$</strong></p>
+          <p class="product-desc"><?php echo htmlspecialchars($product['descripcion'] ?? 'Sin descripción.'); ?></p>
+          <p class="product-price">Precio: <strong><?php echo htmlspecialchars($product['precio']); ?>$</strong></p>
 
          <?php if ($user_rol === 'administrador'): ?>
 
@@ -227,14 +227,17 @@ $csrf_token = SecurityHelper::getCsrfToken();
               <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
 
               <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+              <input type="hidden" name="stock_comprometido" value="<?php echo $product['stock_comprometido']; ?>">
+              <!-- new_stock will be calculado en submit (stock_disponible + stock_comprometido) -->
+              <input type="hidden" name="new_stock" value="<?php echo $product['stock_actual']; ?>">
 
-              <label style="font-size: 0.8rem;">Stock Físico Total:</label>
-              <input type="number" name="new_stock" value="<?php echo $product['stock_actual']; ?>" min="0" style="width: 60px;">
+              <label class="small-label">Stock Disponible<?= ($product['stock_comprometido'] > 0 && $product['nombre'] !== 'Aceite para carro Inca') ? ' - ' . $product['stock_comprometido'] . ' reservada(s)' : '' ?>:</label>
+              <input type="number" name="new_stock_available" value="<?php echo ($product['stock_actual'] - $product['stock_comprometido']); ?>" min="0" class="small-input">
 
-              <div style="margin-top: 5px;">
+              <article class="admin-actions">
                 <button type="submit" name="action" value="update_stock" class="btn admin-btn">Actualizar</button>
                 <button type="submit" name="action" value="delete_product" class="btn admin-btn delete-btn" onclick="return confirm('¿Seguro que deseas eliminar este producto?');">Eliminar</button>
-              </div>
+              </article>
             </form>
 
           <?php else: ?>
@@ -247,7 +250,7 @@ $csrf_token = SecurityHelper::getCsrfToken();
 
               <?php if ($user_logged_in): ?>
                 <input type="number" name="quantity" value="1" min="1" max="<?php echo $stock; ?>"
-                  <?php echo ($stock <= 0) ? 'disabled' : ''; ?> style="width: 50px; text-align: center;">
+                  <?php echo ($stock <= 0) ? 'disabled' : ''; ?> class="small-input center">
 
                 <button type="submit" class="btn" <?php echo ($stock <= 0) ? 'disabled' : ''; ?>>
                   Reservar
@@ -342,7 +345,7 @@ $csrf_token = SecurityHelper::getCsrfToken();
 
       <article class="pregunta-card">
         <h4>¿Realizan envios a domicilio? C.A</h4>
-        <p>Por ahora no realizamos envio a domicilio.</p>
+        <p>Si, Realizamos Envio a Nivel Nacional.</p>
       </article>
 
       <article class="pregunta-card">
@@ -356,29 +359,29 @@ $csrf_token = SecurityHelper::getCsrfToken();
       <h2 class="container-form__title">Formulario de contacto</h2>
       <form class="container-form__form" action="" method="POST">
 
-        <div class="container-form__div">
+        <article class="container-form__div">
           <label for="nombre_contacto">Nombre</label>
           <input class="container-form__campo" type="text" id="nombre_contacto" placeholder="Nombre">
-        </div>
+        </article>
 
-        <div class="container-form__div">
+        <article class="container-form__div">
           <label for="numero_contacto">Numero</label>
           <input class="container-form__campo" type="number" id="numero_contacto" placeholder="Numero" min="1">
-        </div>
+        </article>
 
-        <div class="container-form__div">
+        <article class="container-form__div">
           <label for="correo_contacto">Correo</label>
           <input class="container-form__campo" type="email" id="correo_contacto" placeholder="Correo">
-        </div>
+        </article>
 
-        <div class="container-form__div">
+        <article class="container-form__div">
           <label for="mensaje_contacto">Mensaje</label>
           <textarea class="container-form__campo" name="mensaje_contacto" id="mensaje_contacto" placeholder="Deja un mensaje"></textarea>
-        </div>
+        </article>
 
-        <div class="container-form__div container-form__submit alinear-derecha">
+        <article class="container-form__div container-form__submit alinear-derecha">
           <button type="submit">Enviar</button>
-        </div>
+        </article>
       </form>
 
   </main>
@@ -391,6 +394,53 @@ $csrf_token = SecurityHelper::getCsrfToken();
   </footer>
   <script src="../js/header-component.js"></script>
   <script src="../js/theme.js"></script>
+  <script>
+    // Evita envíos dobles en formularios de administración sin eliminar
+    // el botón pulsado (para que su name/value se incluya en el POST).
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.admin-controls').forEach(function(form) {
+        form.addEventListener('click', function(e) {
+          const target = e.target;
+          if (!target) return;
+          // Si se hizo click en un botón submit
+          if (target.tagName === 'BUTTON' && target.type === 'submit') {
+            // Si ya se envió, bloquear el nuevo click
+            if (form.dataset.submitted === 'true') {
+              e.preventDefault();
+              return;
+            }
+            // Marcamos como enviado inmediatamente para evitar dobles clicks
+            form.dataset.submitted = 'true';
+            // Deshabilitamos otros botones para feedback, pero dejamos el pulsado
+            form.querySelectorAll('button[type="submit"]').forEach(function(btn) {
+              if (btn !== target) btn.disabled = true;
+            });
+          }
+        });
+
+        // Si por algún motivo la sumisión se cancela, limpiamos el flag
+        form.addEventListener('reset', function() {
+          form.dataset.submitted = 'false';
+          form.querySelectorAll('button[type="submit"]').forEach(function(btn) { btn.disabled = false; });
+        });
+        
+        // Interceptar submit para calcular new_stock real a enviar
+        form.addEventListener('submit', function(e) {
+          // Obtener inputs
+          const availInput = form.querySelector('input[name="new_stock_available"]');
+          const compInput = form.querySelector('input[name="stock_comprometido"]');
+          const hiddenNew = form.querySelector('input[name="new_stock"]');
+          if (availInput && compInput && hiddenNew) {
+            const avail = parseInt(availInput.value || '0', 10);
+            const comp = parseInt(compInput.value || '0', 10);
+            // Calculamos el stock físico total que queremos establecer
+            const computed = avail + comp;
+            hiddenNew.value = computed;
+          }
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>
