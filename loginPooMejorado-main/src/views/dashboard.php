@@ -62,6 +62,7 @@ $csrf_token = SecurityHelper::getCsrfToken();
   <link rel="stylesheet" href="../styles/css/preguntas.css">
   <link rel="stylesheet" href="../styles/css/ContactForm.css">
   <link rel="stylesheet" href="../styles/css/dashboard.css">
+  <link rel="stylesheet" href="../styles/css/pasantia.css">
   <title>Dashboard - Lubriken</title>
 </head>
 
@@ -330,7 +331,72 @@ $csrf_token = SecurityHelper::getCsrfToken();
       </section>
 
     </section>
-    <!--Preguntas frecuentes-->
+      <!-- Reporte de Pasantías: análisis y gráfico -->
+
+      <?php
+      // Aseguramos que $stats exista para evitar warnings si no fue calculado
+      $stats = $stats ?? ['labels' => [], 'data' => [], 'media' => 0, 'mediana' => 0, 'moda' => 0];
+      ?>
+
+      <div class="reporte-pasantias card p-4 mb-4">
+        <h2>📊 Reporte de Pasantías Tempranas: Análisis de Ventas</h2>
+        <hr>
+
+        <div class="stats-section mb-4">
+          <h4>1. Variable de Estudio y Muestra (Requisito A)</h4>
+          <p>
+            <strong>Variable de Estudio:</strong> Cantidad Total Vendida por Producto (Variable Cuantitativa Discreta).
+          </p>
+          <p>
+            <strong>Muestra Utilizada:</strong> Todos los productos únicos con ventas confirmadas.
+          </p>
+          <p class="text-muted small-muted"><small>Productos Únicos en Muestra: <?php echo count($stats['labels']); ?>.</small></p>
+        </div>
+
+        <div class="stats-section mb-4">
+          <h4>2. Medidas de Tendencia Central (Requisitos B y C)</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Medida</th>
+                <th>Valor Calculado (Unidades)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Media (Promedio)</td>
+                <td><?php echo number_format($stats['media'], 2); ?></td>
+              </tr>
+              <tr>
+                <td>Mediana (Valor Central)</td>
+                <td><?php echo number_format($stats['mediana'], 2); ?></td>
+              </tr>
+              <tr>
+                <td>Moda (Valor Más Frecuente)</td>
+                <td>
+                  <?php
+                    if (is_array($stats['moda'])) {
+                      echo 'Multimodal: ' . implode(', ', $stats['moda']) . " unidades";
+                    } else {
+                      echo $stats['moda'] . " unidades";
+                    }
+                  ?>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="stats-section">
+          <h4>3. Representación Gráfica (Requisito D)</h4>
+          <div class="ventas-wrapper">
+            <canvas id="ventasChart"></canvas>
+          </div>
+          <p class="text-center small-muted" style="text-align:center; margin-top:8px;"><small>Gráfico de Barras Vertical (Columnas) mostrando el volumen de ventas por producto.</small></p>
+        </div>
+      </div>
+
+      <!--Preguntas frecuentes-->
     <h3 class="faq-title">Preguntas Frecuentes</h3>
     <section id="preguntas" class="preguntas">
       <article class="pregunta-card">
@@ -439,6 +505,51 @@ $csrf_token = SecurityHelper::getCsrfToken();
           }
         });
       });
+    });
+  </script>
+  <!-- Chart.js CDN and ventasChart initialization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('ventasChart');
+      const chartLabels = <?php echo json_encode($stats['labels']); ?>;
+      const chartData = <?php echo json_encode($stats['data']); ?>;
+
+      const backgroundColors = chartData.map((data, index) =>
+        index < 3 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+      );
+
+      if (ctx && chartData.length > 0 && typeof Chart !== 'undefined') {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              label: 'Unidades Vendidas',
+              data: chartData,
+              backgroundColor: backgroundColors,
+              borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: { display: true, text: 'Total de Unidades Vendidas por Producto', font: { size: 16, weight: 'bold' } },
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Cantidad Vendida (Eje Y)', font: { weight: 'bold' } },
+                ticks: { precision: 0 }
+              },
+              x: { title: { display: true, text: 'Producto (Eje X)', font: { weight: 'bold' } } }
+            }
+          }
+        });
+      }
     });
   </script>
 </body>
